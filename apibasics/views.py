@@ -6,46 +6,45 @@ from rest_framework import status
 from rest_framework.parsers import JSONParser
 from .models import Article
 from .serializer import ArticleSerializer
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from django.http import Http404
 
-@api_view(['GET', 'POST'])
-def articleList(request, format=None):
-    if request.method == "GET":
+# @api_view(['GET', 'POST'])
+class ArticleList(APIView):
+    def get(self, request, format=None):
         articles=Article.objects.all()
         serializer= ArticleSerializer(articles, many=True)
-        # return JsonResponse(serializer.data, safe=False)
         return Response(serializer.data) # because of the decorator, we dont need any http objects/functions
-    elif request.method=="POST":
-        # data= JSONParser().parse(request)
         #we're no longer explicitly tying our requests or responses to json, other formats are welcome
+    def post(self, request, format=None):    
         serializer= ArticleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            # return JsonResponse(serializer.data, status=201)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # return JsonResponse(serializer.errors, status=400) 
         #we're returning response objects with data, but allowing REST framework to render the response into the correct content type for us
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def article_detail(request, pk, format=None):
-    try:
-        article=Article.objects.get(pk=pk)
-    except Article.DoesNotExist:
-        # return HttpResponse(status=404)
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method=="GET":
+# @api_view(['GET', 'PUT', 'DELETE'])
+class Articledetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Article.objects.get(pk=pk)
+        except Article.DoesNotExist:
+            raise Http404
+    def get(self, request, pk, format=None):
+        article= self.get_object(pk=pk)
         serializer=ArticleSerializer(article)
         return Response(serializer.data) 
-    elif request.method=="PUT":
-        # data=JSONParser().parse(request)
+    def put(self, request, pk, format=None):
+        article= self.get_object(pk=pk)
         serializer=ArticleSerializer(article, data=request.data) 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)   
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method=="DELETE":
+    def delete(self, request, pk, format=None):
+        article= self.get_object(pk=pk)
         article.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)           
 
