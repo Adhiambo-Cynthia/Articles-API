@@ -9,9 +9,13 @@ from .serializer import ArticleSerializer
 # from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from django.http import Http404
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 # @api_view(['GET', 'POST'])
 class ArticleList(APIView):
+    authentication_classes = [TokenAuthentication, SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
         articles=Article.objects.all()
         serializer= ArticleSerializer(articles, many=True)
