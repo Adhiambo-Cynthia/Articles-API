@@ -6,13 +6,20 @@ from rest_framework import status
 from rest_framework.parsers import JSONParser
 from .models import Article
 from .serializer import ArticleSerializer
-# from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from django.http import Http404
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-# @api_view(['GET', 'POST'])
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'users': reverse('user-list', request=request, format=format),
+        'articles': reverse('article-list', request=request, format=format)
+    })
+
 class ArticleList(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAuthenticated]
